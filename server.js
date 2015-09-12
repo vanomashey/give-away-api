@@ -26,7 +26,7 @@ app.use(bodyParser.json());
 var port = process.env.PORT || 5000;        // set our port
 
 var mongoose   = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/databasetest'); // connect
+mongoose.connect('mongodb://mongodb:27017/databasetest'); // connect
 
 
 // ROUTES FOR OUR API
@@ -105,16 +105,17 @@ router.route('/things/:thing_id')
 
 router.route('/setup')
 
-	.get(function(req, res) {
+	.post(function(req, res) {
 	  // create a sample user
-	  var nick = new User({ 
-	    name: 'Nick Cerminara', 
-	    password: 'password',
+		console.log(req.body);
+	  var newuser = new User({ 
+	    username: req.body.username, 
+	    password: req.body.password,
 	    admin: true 
 	  });
 
 	  // save the sample user
-	  nick.save(function(err) {
+	  newuser.save(function(err) {
 	    if (err) throw err;
 
 	    console.log('User saved successfully');
@@ -123,13 +124,14 @@ router.route('/setup')
 	});
 
 
+
 // route to authenticate a user (POST http://localhost:8080/api/authenticate)
 router.route('/authenticate')
 	.post(function(req, res) {
 
 	  // find the user
 	  User.findOne({
-	    name: req.body.name
+	    username: req.body.username
 	  }, function(err, user) {
 
 	    if (err) throw err;
@@ -198,7 +200,31 @@ router.route('/users')
 	  User.find({}, function(err, users) {
 	    res.json(users);
 	  });
-	});   
+    	});
+
+router.route('/users/:user_id')
+        .get(function(req, res) {
+          User.find({_id:res.paramas.user_id}, function(err, user) {
+            res.json(user);
+          });
+        })
+        .delete(function(req, res) {
+                id = req.params.user_id;
+                console.log("delete " + req.params.user_id);
+                if (id){
+                        console.log("User is going to be deleted : " + id);
+                        User.remove({
+                                _id: id
+                        }, function(err, thing) {
+                                if (err)
+                                res.send(err);
+                                res.json({ message: 'Successfully deleted' });
+                        });
+                        } else {
+                                console.log("please enter valid id to delete");
+                                res.json("message: 'ID ERROR'");
+                        }
+        });
 
 
 // test route to make sure everything is working (accessed at GET http://localhost:8080/api)
